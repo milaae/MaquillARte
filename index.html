@@ -1,4 +1,3 @@
-html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,62 +10,68 @@ html
     body {
       margin: 0;
       font-family: 'Poppins', sans-serif;
-      text-align: center;
       background: radial-gradient(circle at 30% 30%, #3b1a73 0%, #150b3e 60%, #07041f 100%);
       color: #fff;
+      overflow: hidden;
+      text-align: center;
     }
 
     h1 {
-      font-size: 32px;
-      margin: 20px 0 10px;
+      font-size: 28px;
+      margin-top: 20px;
       text-shadow: 0 0 12px rgba(255,255,255,0.15);
+      z-index: 3;
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
     }
 
-    /* Contenedor general */
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      gap: 20px;
-      padding-bottom: 20px;
-    }
-
-    /* Cámara centrada */
     .camera-wrapper {
       position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 90vw;
-      max-width: 480px;
-      overflow: hidden;
-      border-radius: 20px;
-      box-shadow: 0 0 40px rgba(90, 60, 255, 0.4);
     }
 
-    video, canvas#canvas {
+    /* Solo mostrar el canvas (el video queda oculto) */
+    video {
+      display: none;
+    }
+
+    canvas#canvas {
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover;
       display: block;
-      border-radius: 20px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
     }
 
-    /* Panel de controles */
+    /* Panel flotante */
     .controls {
+      position: absolute;
+      bottom: 5%;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 20px;
-      background: rgba(255, 255, 255, 0.08);
-      padding: 16px 20px;
+      gap: 15px;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 18px 22px;
       border-radius: 20px;
-      backdrop-filter: blur(15px);
-      box-shadow: 0 0 20px rgba(138, 228, 255, 0.2);
-      border: 1px solid rgba(180, 180, 255, 0.2);
-      width: 90vw;
-      max-width: 480px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 0 25px rgba(138, 228, 255, 0.25);
+      border: 1px solid rgba(180, 180, 255, 0.25);
+      z-index: 5;
+      width: 90%;
+      max-width: 420px;
     }
 
     .group {
@@ -119,21 +124,19 @@ html
     }
 
     @media (max-width: 768px) {
-      h1 { font-size: 22px; }
-      .controls { gap: 12px; padding: 10px; }
+      h1 { font-size: 22px; top: 10px; }
+      .controls { gap: 10px; padding: 12px 16px; bottom: 4%; }
       .group label { font-size: 12px; }
+      .color-btn { width: 24px; height: 24px; }
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
+  <div class="camera-wrapper">
     <h1>💄 MaquillARte — Realidad Aumentada</h1>
-
-    <div class="camera-wrapper">
-      <video id="video" autoplay playsinline></video>
-      <canvas id="canvas"></canvas>
-    </div>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
 
     <div class="controls">
       <div class="group">
@@ -222,8 +225,8 @@ html
 
     async function onResults(results) {
       if (!results?.image) return;
-      canvas.width = video.videoWidth || results.image.width;
-      canvas.height = video.videoHeight || results.image.height;
+      canvas.width = results.image.width;
+      canvas.height = results.image.height;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
       if (!results.multiFaceLandmarks) return;
