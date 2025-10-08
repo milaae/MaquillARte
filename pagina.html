@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💄 MaquillARte — Realidad Aumentada</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at 30% 30%, #3b1a73 0%, #150b3e 60%, #07041f 100%);
+      color: #fff;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-top: 20px;
+      text-shadow: 0 0 12px rgba(255,255,255,0.15);
+      z-index: 3;
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .camera-wrapper {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    video { display: none; }
+
+    canvas#canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 18px 22px;
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 0 25px rgba(138, 228, 255, 0.25);
+      border: 1px solid rgba(180, 180, 255, 0.25);
+      z-index: 5;
+      width: 90%;
+      max-width: 420px;
+    }
+
+    .group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .group label {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .swatches { display: flex; gap: 8px; }
+
+    .color-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .color-btn:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 10px rgba(138, 228, 255, 0.6);
+    }
+
+    button#reset {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6b5bff, #00f0ff);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.3s ease;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+
+    button#reset:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
+    }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 22px; top: 10px; }
+      .controls { gap: 10px; padding: 12px 16px; bottom: 4%; }
+      .group label { font-size: 12px; }
+      .color-btn { width: 24px; height: 24px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="camera-wrapper">
+    <h1>💄 MaquillARte — Realidad Aumentada</h1>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+
+    <div class="controls">
+      <div class="group">
+        <label>Labial</label>
+        <div id="labialSwatches" class="swatches"></div>
+      </div>
+      <div class="group">
+        <label>Rubor</label>
+        <div id="ruborSwatches" class="swatches"></div>
+      </div>
+      <div class="group">
+        <label>Sombra</label>
+        <div id="sombrasSwatches" class="swatches"></div>
+      </div>
+      <div class="group">
+        <label>Cejas</label>
+        <div id="cejasSwatches" class="swatches"></div>
+      </div>
+      <button id="reset">Reiniciar maquillaje</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    let labialColor = "", ruborColor = "", sombrasColor = "", cejasColor = "";
+    let keypoints = null;
+
+    const ajustes = {
+      ruborIzq: { xOffset: -0.015, yOffset: 0.015 },
+      ruborDer: { xOffset: 0.015, yOffset: 0.015 },
+      sombraIzq: { xOffset: 0, yOffset: -0.014 },
+      sombraDer: { xOffset: 0, yOffset: -0.014 },
+    };
+
+    const paletas = {
+      labiales: ["#c58b7b", "#e07b91", "#b43737"],
+      rubores: ["#f7a18f", "#f3b3b3", "#d68ca3"],
+      sombras: ["#d6c3a1", "#a0785a", "#8b8680"],
+      cejas: ["#9b7355", "#6b4c3b", "#3e2d25"]
+    };
+
+    function crearSwatches(colores, id, cb) {
+      const cont = document.getElementById(id);
+      cont.innerHTML = "";
+      colores.forEach(c => {
+        const btn = document.createElement("button");
+        btn.className = "color-btn";
+        btn.style.backgroundColor = c;
+        btn.onclick = () => { cb(c); markSelected(btn, cont); };
+        cont.appendChild(btn);
+      });
+    }
+
+    function markSelected(btn, cont) {
+      Array.from(cont.children).forEach(b => b.style.outline = "none");
+      btn.style.outline = "3px solid rgba(138, 228, 255, 0.8)";
+      btn.style.boxShadow = "0 0 10px rgba(138, 228, 255, 0.7)";
+    }
+
+    crearSwatches(paletas.labiales, "labialSwatches", c => labialColor = c);
+    crearSwatches(paletas.rubores, "ruborSwatches", c => ruborColor = c);
+    crearSwatches(paletas.sombras, "sombrasSwatches", c => sombrasColor = c);
+    crearSwatches(paletas.cejas, "cejasSwatches", c => cejasColor = c);
+
+    document.getElementById("reset").addEventListener("click", () => {
+      labialColor = ruborColor = sombrasColor = cejasColor = "";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      video.srcObject = stream;
+    }
+
+    const faceMesh = new FaceMesh({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
+    faceMesh.onResults(onResults);
+
+    async function onResults(results) {
+      if (!results?.image) return;
+      canvas.width = results.image.width;
+      canvas.height = results.image.height;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+      if (!results.multiFaceLandmarks || !results.multiFaceLandmarks[0]) return;
+      keypoints = results.multiFaceLandmarks[0];
+      if (labialColor) drawLabios(labialColor);
+      if (ruborColor) drawRubor(ruborColor);
+      if (sombrasColor) drawSombras(sombrasColor);
+      if (cejasColor) drawCejas(cejasColor);
+    }
+
+    function drawLabios(color) {
+      if (!keypoints || keypoints.length < 400) return;
+      const upper = [61,185,40,39,37,0,267,269,270,409,291];
+      const lower = [61,146,91,181,84,17,314,405,321,375,291];
+      drawRegion(upper.concat(lower), color, 0.6);
+    }
+
+    function drawRubor(color) {
+      if (!keypoints || !keypoints[50] || !keypoints[280]) return;
+      drawSoftOval(keypoints[50], 45, 45, color, 0.35, ajustes.ruborIzq);
+      drawSoftOval(keypoints[280], 45, 45, color, 0.35, ajustes.ruborDer);
+    }
+
+    function drawSombras(color) {
+      if (!keypoints || !keypoints[159] || !keypoints[386]) return;
+      drawSoftOval(keypoints[159], 60, 35, color, 0.4, ajustes.sombraIzq);
+      drawSoftOval(keypoints[386], 60, 35, color, 0.4, ajustes.sombraDer);
+    }
+
+    function drawCejas(color) {
+      if (!keypoints) return;
+      const leftBrow = [55,107,66,105,63,70,46,53,52,65];
+      const rightBrow = [285,336,296,334,293,300,276,283,295];
+      drawRegion(leftBrow, color, 0.5);
+      drawRegion(rightBrow, color, 0.5);
+    }
+
+    // ✅ Versión estable que evita error en consola
+    function drawRegion(indices, color, alpha) {
+      if (!keypoints) return;
+      const validPoints = indices.map(i => keypoints[i]).filter(p => p && p.x && p.y);
+      if (validPoints.length < 3) return;
+      ctx.save();
+      ctx.beginPath();
+      validPoints.forEach((p, idx) => {
+        const x = p.x * canvas.width;
+        const y = p.y * canvas.height;
+        if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.globalAlpha = alpha;
+      ctx.filter = "blur(2px)";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawSoftOval(point, radiusX, radiusY, color, alpha, ajuste) {
+      if (!point) return;
+      const x = (point.x + (ajuste?.xOffset || 0)) * canvas.width;
+      const y = (point.y + (ajuste?.yOffset || 0)) * canvas.height;
+      const grad = ctx.createRadialGradient(x, y, 10, x, y, 60);
+      grad.addColorStop(0, hexToRgba(color, alpha));
+      grad.addColorStop(1, hexToRgba(color, 0));
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(x, y, radiusX, radiusY, 0, 0, 2 * Math.PI);
+      ctx.fillStyle = grad;
+      ctx.filter = "blur(6px)";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function hexToRgba(hex, alpha) {
+      const c = hex.replace('#','');
+      const r = parseInt(c.substring(0,2),16);
+      const g = parseInt(c.substring(2,4),16);
+      const b = parseInt(c.substring(4,6),16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    startCamera();
+    const camera = new Camera(video, {
+      onFrame: async () => { await faceMesh.send({ image: video }); }
+    });
+    camera.start();
+  </script>
+</body>
+</html>
