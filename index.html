@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -12,48 +13,50 @@
       font-family: 'Poppins', sans-serif;
       background: radial-gradient(circle at 30% 30%, #3b1a73 0%, #150b3e 60%, #07041f 100%);
       color: #fff;
-      overflow: hidden;
       text-align: center;
+      overflow: hidden;
     }
 
     h1 {
-      font-size: 28px;
-      margin-top: 20px;
-      text-shadow: 0 0 12px rgba(255,255,255,0.15);
-      z-index: 3;
       position: absolute;
-      top: 15px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
+      font-size: 28px;
+      text-shadow: 0 0 12px rgba(255,255,255,0.15);
+      z-index: 3;
     }
 
     .camera-wrapper {
       position: relative;
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
+      overflow: hidden;
     }
 
-    /* Solo mostrar el canvas (el video queda oculto) */
     video {
-      display: none;
-    }
-
-    canvas#canvas {
+      position: absolute;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
+      opacity: 0.35; /* deja ver el fondo */
+      filter: blur(3px);
+      z-index: 0;
+    }
+
+    canvas#canvas {
       position: absolute;
       top: 0;
       left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       z-index: 1;
     }
 
-    /* Panel flotante */
     .controls {
       position: absolute;
       bottom: 5%;
@@ -74,37 +77,17 @@
       max-width: 420px;
     }
 
-    .group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
+    .group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .group label { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .group label {
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .swatches {
-      display: flex;
-      gap: 8px;
-    }
+    .swatches { display: flex; gap: 8px; }
 
     .color-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 2px solid #fff;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid #fff; cursor: pointer; transition: all 0.2s ease;
     }
 
-    .color-btn:hover {
-      transform: scale(1.15);
-      box-shadow: 0 0 10px rgba(138, 228, 255, 0.6);
-    }
+    .color-btn:hover { transform: scale(1.15); box-shadow: 0 0 10px rgba(138, 228, 255, 0.6); }
 
     button#reset {
       padding: 10px 14px;
@@ -118,13 +101,8 @@
       box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
     }
 
-    button#reset:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
-    }
-
     @media (max-width: 768px) {
-      h1 { font-size: 22px; top: 10px; }
+      h1 { font-size: 22px; }
       .controls { gap: 10px; padding: 12px 16px; bottom: 4%; }
       .group label { font-size: 12px; }
       .color-btn { width: 24px; height: 24px; }
@@ -155,7 +133,7 @@
         <label>Cejas</label>
         <div id="cejasSwatches" class="swatches"></div>
       </div>
-      <button id="reset">Reiniciar maquillaje</button>
+      <button id="reset">Reiniciar</button>
     </div>
   </div>
 
@@ -166,7 +144,6 @@
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-
     let labialColor = "", ruborColor = "", sombrasColor = "", cejasColor = "";
     let keypoints = null;
 
@@ -209,7 +186,6 @@
 
     document.getElementById("reset").addEventListener("click", () => {
       labialColor = ruborColor = sombrasColor = cejasColor = "";
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
     async function startCamera() {
@@ -223,14 +199,12 @@
     faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
     faceMesh.onResults(onResults);
 
-    async function onResults(results) {
-      if (!results?.image) return;
-      canvas.width = results.image.width;
-      canvas.height = results.image.height;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-      if (!results.multiFaceLandmarks) return;
+    function onResults(results) {
+      if (!results?.multiFaceLandmarks) return;
       keypoints = results.multiFaceLandmarks[0];
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (labialColor) drawLabios(labialColor);
       if (ruborColor) drawRubor(ruborColor);
       if (sombrasColor) drawSombras(sombrasColor);
@@ -240,13 +214,13 @@
     function drawLabios(color) {
       const upper = [61,185,40,39,37,0,267,269,270,409,291];
       const lower = [61,146,91,181,84,17,314,405,321,375,291];
-      drawRegion(upper.concat(lower), color, 0.6);
+      drawRegionBlur(upper.concat(lower), color, 0.6, 6);
     }
 
     function drawRubor(color) {
       const left = keypoints[50], right = keypoints[280];
-      drawSoftOval(left, 45, 45, color, 0.35, ajustes.ruborIzq);
-      drawSoftOval(right, 45, 45, color, 0.35, ajustes.ruborDer);
+      drawSoftOval(left, 45, 45, color, 0.3, ajustes.ruborIzq);
+      drawSoftOval(right, 45, 45, color, 0.3, ajustes.ruborDer);
     }
 
     function drawSombras(color) {
@@ -258,39 +232,41 @@
     function drawCejas(color) {
       const leftBrow = [55,107,66,105,63,70,46,53,52,65];
       const rightBrow = [285,336,296,334,293,300,276,283,295];
-      drawRegion(leftBrow, color, 0.5);
-      drawRegion(rightBrow, color, 0.5);
+      drawRegionBlur(leftBrow, color, 0.5, 3);
+      drawRegionBlur(rightBrow, color, 0.5, 3);
     }
 
-    function drawRegion(indices, color, alpha) {
-      ctx.save();
-      ctx.beginPath();
+    function drawRegionBlur(indices, color, alpha, blur) {
+      const temp = document.createElement("canvas");
+      temp.width = canvas.width;
+      temp.height = canvas.height;
+      const tctx = temp.getContext("2d");
+      tctx.beginPath();
       indices.forEach((i, idx) => {
         const p = keypoints[i];
-        if (!p) return;
-        const x = p.x * canvas.width;
-        const y = p.y * canvas.height;
-        if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        const x = p.x * temp.width;
+        const y = p.y * temp.height;
+        if (idx === 0) tctx.moveTo(x, y); else tctx.lineTo(x, y);
       });
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.globalAlpha = alpha;
-      ctx.filter = "blur(2px)";
-      ctx.fill();
-      ctx.restore();
+      tctx.closePath();
+      tctx.fillStyle = hexToRgba(color, alpha);
+      tctx.fill();
+      ctx.filter = `blur(${blur}px)`;
+      ctx.drawImage(temp, 0, 0);
+      ctx.filter = "none";
     }
 
     function drawSoftOval(point, radiusX, radiusY, color, alpha, ajuste) {
       const x = (point.x + (ajuste?.xOffset || 0)) * canvas.width;
       const y = (point.y + (ajuste?.yOffset || 0)) * canvas.height;
-      const grad = ctx.createRadialGradient(x, y, 10, x, y, 60);
+      const grad = ctx.createRadialGradient(x, y, 5, x, y, Math.max(radiusX, radiusY) * 1.5);
       grad.addColorStop(0, hexToRgba(color, alpha));
+      grad.addColorStop(0.5, hexToRgba(color, alpha * 0.6));
       grad.addColorStop(1, hexToRgba(color, 0));
       ctx.save();
+      ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.ellipse(x, y, radiusX, radiusY, 0, 0, 2 * Math.PI);
-      ctx.fillStyle = grad;
-      ctx.filter = "blur(6px)";
       ctx.fill();
       ctx.restore();
     }
@@ -311,3 +287,4 @@
   </script>
 </body>
 </html>
+```
