@@ -48,6 +48,7 @@
       top: 0;
       left: 0;
       z-index: 1;
+      transform: scaleX(-1); /* 🪞 espejo natural */
     }
 
     .controls {
@@ -158,7 +159,7 @@
   <script>
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { colorSpace: "srgb" }); // ✅ color correcto
 
     let labialColor = "", ruborColor = "", sombrasColor = "", cejasColor = "";
     let keypoints = null;
@@ -217,12 +218,12 @@
     faceMesh.onResults(onResults);
 
     async function onResults(results) {
-      if (!results?.image) return;
-      canvas.width = results.image.width;
-      canvas.height = results.image.height;
+      if (!results?.multiFaceLandmarks || !results.multiFaceLandmarks[0]) return;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-      if (!results.multiFaceLandmarks || !results.multiFaceLandmarks[0]) return;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // ✅ usa video, no results.image
+
       keypoints = results.multiFaceLandmarks[0];
       if (labialColor) drawLabios(labialColor);
       if (ruborColor) drawRubor(ruborColor);
@@ -257,7 +258,6 @@
       drawRegion(rightBrow, color, 0.5);
     }
 
-    // ✅ Versión estable que evita error en consola
     function drawRegion(indices, color, alpha) {
       if (!keypoints) return;
       const validPoints = indices.map(i => keypoints[i]).filter(p => p && p.x && p.y);
