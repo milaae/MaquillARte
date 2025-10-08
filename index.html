@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>💄 MaquillARte — Realidad Aumentada</title>
 
-  <!-- Fuente original -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
   <style>
@@ -71,7 +71,7 @@
     }
 
     .group label {
-      color: #ffffff; /* Blancas */
+      color: #ffffff;
       font-size: 14px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -115,6 +115,55 @@
       transform: scale(1.05);
       box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
     }
+
+    /* === AJUSTES RESPONSIVOS PARA MÓVILES === */
+    @media (max-width: 768px) {
+      body {
+        overflow: auto;
+        height: auto;
+      }
+
+      video, canvas#canvas {
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
+        width: 100vw;
+        height: auto;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin: 12px 0;
+      }
+
+      .controls {
+        position: relative;
+        bottom: auto;
+        left: 0;
+        transform: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 12px 0;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+      }
+
+      .group {
+        flex-direction: row;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      button#reset {
+        margin-top: 8px;
+      }
+    }
   </style>
 </head>
 
@@ -144,7 +193,6 @@
     <button id="reset">Reiniciar maquillaje</button>
   </div>
 
-  <!-- MediaPipe -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
 
@@ -153,10 +201,7 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
-    let labialColor = "";
-    let ruborColor = "";
-    let sombrasColor = "";
-    let cejasColor = "";
+    let labialColor = "", ruborColor = "", sombrasColor = "", cejasColor = "";
     let keypoints = null;
 
     const ajustes = {
@@ -312,3 +357,4 @@
   </script>
 </body>
 </html>
+```
