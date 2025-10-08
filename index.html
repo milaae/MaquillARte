@@ -37,9 +37,7 @@
       align-items: center;
     }
 
-    video {
-      display: none;
-    }
+    video { display: none; }
 
     canvas#canvas {
       width: 100%;
@@ -85,10 +83,7 @@
       letter-spacing: 0.5px;
     }
 
-    .swatches {
-      display: flex;
-      gap: 8px;
-    }
+    .swatches { display: flex; gap: 8px; }
 
     .color-btn {
       width: 28px;
@@ -236,7 +231,7 @@
     }
 
     function drawLabios(color) {
-      if (!keypoints || keypoints.length < 300) return;
+      if (!keypoints || keypoints.length < 400) return;
       const upper = [61,185,40,39,37,0,267,269,270,409,291];
       const lower = [61,146,91,181,84,17,314,405,321,375,291];
       drawRegion(upper.concat(lower), color, 0.6);
@@ -244,16 +239,14 @@
 
     function drawRubor(color) {
       if (!keypoints || !keypoints[50] || !keypoints[280]) return;
-      const left = keypoints[50], right = keypoints[280];
-      drawSoftOval(left, 45, 45, color, 0.35, ajustes.ruborIzq);
-      drawSoftOval(right, 45, 45, color, 0.35, ajustes.ruborDer);
+      drawSoftOval(keypoints[50], 45, 45, color, 0.35, ajustes.ruborIzq);
+      drawSoftOval(keypoints[280], 45, 45, color, 0.35, ajustes.ruborDer);
     }
 
     function drawSombras(color) {
       if (!keypoints || !keypoints[159] || !keypoints[386]) return;
-      const left = keypoints[159], right = keypoints[386];
-      drawSoftOval(left, 60, 35, color, 0.4, ajustes.sombraIzq);
-      drawSoftOval(right, 60, 35, color, 0.4, ajustes.sombraDer);
+      drawSoftOval(keypoints[159], 60, 35, color, 0.4, ajustes.sombraIzq);
+      drawSoftOval(keypoints[386], 60, 35, color, 0.4, ajustes.sombraDer);
     }
 
     function drawCejas(color) {
@@ -264,12 +257,10 @@
       drawRegion(rightBrow, color, 0.5);
     }
 
-    // ✅ Versión segura: salta puntos indefinidos
+    // ✅ Versión estable que evita error en consola
     function drawRegion(indices, color, alpha) {
       if (!keypoints) return;
-      const validPoints = indices
-        .map(i => keypoints[i])
-        .filter(p => p && p.x !== undefined && p.y !== undefined);
+      const validPoints = indices.map(i => keypoints[i]).filter(p => p && p.x && p.y);
       if (validPoints.length < 3) return;
       ctx.save();
       ctx.beginPath();
@@ -287,6 +278,7 @@
     }
 
     function drawSoftOval(point, radiusX, radiusY, color, alpha, ajuste) {
+      if (!point) return;
       const x = (point.x + (ajuste?.xOffset || 0)) * canvas.width;
       const y = (point.y + (ajuste?.yOffset || 0)) * canvas.height;
       const grad = ctx.createRadialGradient(x, y, 10, x, y, 60);
