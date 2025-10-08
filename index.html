@@ -5,62 +5,68 @@ html
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>💄 MaquillARte — Realidad Aumentada</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
   <style>
-    /* === ESTÉTICA AZUL-VIOLETA MODERNA === */
     body {
       margin: 0;
-      padding: 0;
       font-family: 'Poppins', sans-serif;
-      overflow: hidden;
       text-align: center;
       background: radial-gradient(circle at 30% 30%, #3b1a73 0%, #150b3e 60%, #07041f 100%);
-      color: #ffffff;
-      height: 100vh;
+      color: #fff;
     }
 
     h1 {
+      font-size: 32px;
+      margin: 20px 0 10px;
+      text-shadow: 0 0 12px rgba(255,255,255,0.15);
+    }
+
+    /* Contenedor general */
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 20px;
+      padding-bottom: 20px;
+    }
+
+    /* Cámara centrada */
+    .camera-wrapper {
       position: relative;
-      font-size: 36px;
-      font-weight: 600;
-      margin: 25px 0 15px;
-      color: #ffffff;
-      text-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
-      letter-spacing: 0.5px;
-      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 90vw;
+      max-width: 480px;
+      overflow: hidden;
+      border-radius: 20px;
+      box-shadow: 0 0 40px rgba(90, 60, 255, 0.4);
     }
 
     video, canvas#canvas {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border-radius: 20px;
-      width: 70vw;
+      width: 100%;
       height: auto;
-      box-shadow: 0 0 40px rgba(90, 60, 255, 0.4);
-      z-index: 1;
+      display: block;
+      border-radius: 20px;
     }
 
-    /* === PANEL DE CONTROLES === */
+    /* Panel de controles */
     .controls {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
       display: flex;
       flex-wrap: wrap;
+      justify-content: center;
       gap: 20px;
       background: rgba(255, 255, 255, 0.08);
-      padding: 18px 30px;
+      padding: 16px 20px;
       border-radius: 20px;
       backdrop-filter: blur(15px);
       box-shadow: 0 0 20px rgba(138, 228, 255, 0.2);
-      align-items: center;
       border: 1px solid rgba(180, 180, 255, 0.2);
-      z-index: 3;
+      width: 90vw;
+      max-width: 480px;
     }
 
     .group {
@@ -71,11 +77,9 @@ html
     }
 
     .group label {
-      color: #ffffff;
-      font-size: 14px;
-      letter-spacing: 0.5px;
+      font-size: 13px;
       text-transform: uppercase;
-      font-weight: 500;
+      letter-spacing: 0.5px;
     }
 
     .swatches {
@@ -90,7 +94,6 @@ html
       border: 2px solid #fff;
       cursor: pointer;
       transition: all 0.2s ease;
-      box-shadow: 0 0 10px rgba(255,255,255,0.1);
     }
 
     .color-btn:hover {
@@ -105,7 +108,6 @@ html
       color: #fff;
       border: none;
       cursor: pointer;
-      font-family: 'Poppins', sans-serif;
       font-weight: 500;
       transition: 0.3s ease;
       box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
@@ -116,81 +118,42 @@ html
       box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
     }
 
-    /* === AJUSTES RESPONSIVOS PARA MÓVILES === */
     @media (max-width: 768px) {
-      body {
-        overflow: auto;
-        height: auto;
-      }
-
-      video, canvas#canvas {
-        position: relative;
-        top: auto;
-        left: auto;
-        transform: none;
-        width: 100vw;
-        height: auto;
-        border-radius: 0;
-        box-shadow: none;
-      }
-
-      h1 {
-        font-size: 24px;
-        margin: 12px 0;
-      }
-
-      .controls {
-        position: relative;
-        bottom: auto;
-        left: 0;
-        transform: none;
-        width: 100%;
-        flex-direction: column;
-        gap: 12px;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 12px 0;
-        border-radius: 0;
-        box-shadow: none;
-        border: none;
-      }
-
-      .group {
-        flex-direction: row;
-        justify-content: center;
-        gap: 8px;
-      }
-
-      button#reset {
-        margin-top: 8px;
-      }
+      h1 { font-size: 22px; }
+      .controls { gap: 12px; padding: 10px; }
+      .group label { font-size: 12px; }
     }
   </style>
 </head>
 
 <body>
-  <h1>💄 MaquillARte — Realidad Aumentada</h1>
+  <div class="container">
+    <h1>💄 MaquillARte — Realidad Aumentada</h1>
 
-  <video id="video" autoplay playsinline></video>
-  <canvas id="canvas"></canvas>
+    <div class="camera-wrapper">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas"></canvas>
+    </div>
 
-  <div class="controls">
-    <div class="group">
-      <label>Labial</label>
-      <div id="labialSwatches" class="swatches"></div>
+    <div class="controls">
+      <div class="group">
+        <label>Labial</label>
+        <div id="labialSwatches" class="swatches"></div>
+      </div>
+      <div class="group">
+        <label>Rubor</label>
+        <div id="ruborSwatches" class="swatches"></div>
+      </div>
+      <div class="group">
+        <label>Sombra</label>
+        <div id="sombrasSwatches" class="swatches"></div>
+      </div>
+      <div class="group">
+        <label>Cejas</label>
+        <div id="cejasSwatches" class="swatches"></div>
+      </div>
+      <button id="reset">Reiniciar maquillaje</button>
     </div>
-    <div class="group">
-      <label>Rubor</label>
-      <div id="ruborSwatches" class="swatches"></div>
-    </div>
-    <div class="group">
-      <label>Sombra</label>
-      <div id="sombrasSwatches" class="swatches"></div>
-    </div>
-    <div class="group">
-      <label>Cejas</label>
-      <div id="cejasSwatches" class="swatches"></div>
-    </div>
-    <button id="reset">Reiniciar maquillaje</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -205,12 +168,10 @@ html
     let keypoints = null;
 
     const ajustes = {
-      ruborIzq: { xOffset: -0.015, yOffset: 0.015, scale: 1 },
-      ruborDer: { xOffset: 0.015, yOffset: 0.015, scale: 1 },
-      sombraIzq: { xOffset: 0, yOffset: -0.014, scale: 1 },
-      sombraDer: { xOffset: 0, yOffset: -0.014, scale: 1 },
-      labial: { xOffset: 0, yOffset: 0, scale: 1 },
-      cejas: { xOffset: 0, yOffset: 0, scale: 1 }
+      ruborIzq: { xOffset: -0.015, yOffset: 0.015 },
+      ruborDer: { xOffset: 0.015, yOffset: 0.015 },
+      sombraIzq: { xOffset: 0, yOffset: -0.014 },
+      sombraDer: { xOffset: 0, yOffset: -0.014 },
     };
 
     const paletas = {
@@ -249,9 +210,7 @@ html
     });
 
     async function startCamera() {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720 }
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
       video.srcObject = stream;
     }
 
@@ -262,16 +221,13 @@ html
     faceMesh.onResults(onResults);
 
     async function onResults(results) {
-      if (!results || !results.image) return;
+      if (!results?.image) return;
       canvas.width = video.videoWidth || results.image.width;
       canvas.height = video.videoHeight || results.image.height;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
       if (!results.multiFaceLandmarks) return;
       keypoints = results.multiFaceLandmarks[0];
-      if (!keypoints || keypoints.length < 400) return;
-
       if (labialColor) drawLabios(labialColor);
       if (ruborColor) drawRubor(ruborColor);
       if (sombrasColor) drawSombras(sombrasColor);
@@ -285,15 +241,13 @@ html
     }
 
     function drawRubor(color) {
-      const left = keypoints[50];
-      const right = keypoints[280];
+      const left = keypoints[50], right = keypoints[280];
       drawSoftOval(left, 45, 45, color, 0.35, ajustes.ruborIzq);
       drawSoftOval(right, 45, 45, color, 0.35, ajustes.ruborDer);
     }
 
     function drawSombras(color) {
-      const left = keypoints[159];
-      const right = keypoints[386];
+      const left = keypoints[159], right = keypoints[386];
       drawSoftOval(left, 60, 35, color, 0.4, ajustes.sombraIzq);
       drawSoftOval(right, 60, 35, color, 0.4, ajustes.sombraDer);
     }
@@ -308,15 +262,13 @@ html
     function drawRegion(indices, color, alpha) {
       ctx.save();
       ctx.beginPath();
-      let started = false;
-      indices.forEach(i => {
+      indices.forEach((i, idx) => {
         const p = keypoints[i];
         if (!p) return;
         const x = p.x * canvas.width;
         const y = p.y * canvas.height;
-        if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+        if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       });
-      if (!started) { ctx.restore(); return; }
       ctx.closePath();
       ctx.fillStyle = color;
       ctx.globalAlpha = alpha;
@@ -326,8 +278,8 @@ html
     }
 
     function drawSoftOval(point, radiusX, radiusY, color, alpha, ajuste) {
-      const x = (point.x + (ajuste.xOffset || 0)) * canvas.width;
-      const y = (point.y + (ajuste.yOffset || 0)) * canvas.height;
+      const x = (point.x + (ajuste?.xOffset || 0)) * canvas.width;
+      const y = (point.y + (ajuste?.yOffset || 0)) * canvas.height;
       const grad = ctx.createRadialGradient(x, y, 10, x, y, 60);
       grad.addColorStop(0, hexToRgba(color, alpha));
       grad.addColorStop(1, hexToRgba(color, 0));
@@ -350,8 +302,7 @@ html
 
     startCamera();
     const camera = new Camera(video, {
-      onFrame: async () => { await faceMesh.send({ image: video }); },
-      width: 1280, height: 720
+      onFrame: async () => { await faceMesh.send({ image: video }); }
     });
     camera.start();
   </script>
